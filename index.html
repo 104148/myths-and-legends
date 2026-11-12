@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>La Dame Blanche - Survival RPG</title>
+    <style>
+        :root {
+            --bg-deep: #05070c;
+            --panel-bg: #0f1626;
+            --panel-border: #1e293b;
+            --text-main: #cbd5e1;
+            --accent-gold: #fde047;
+            --accent-ghost: #93c5fd;
+            --danger: #ef4444;
+            --success: #22c55e;
+        }
+
+        body {
+            font-family: 'Cinzel', 'Georgia', serif;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-wrapper {
+            width: 100%;
+            max-width: 800px;
+            height: 550px;
+            background: var(--panel-bg);
+            border: 2px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(147, 197, 253, 0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: relative;
+            position: relative;
+        }
+
+        /* Atmospheric Fog Particle Simulation */
+        .fog-layer {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 30%, rgba(147,197,253,0.07) 0%, rgba(5,7,12,0.9) 80%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* HUD Header */
+        .hud-header {
+            background: #090e18;
+            border-bottom: 1px solid var(--panel-border);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .location-tag {
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+
+        .stats-grid {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.8rem;
+        }
+
+        .stat-bar-bg {
+            width: 90px;
+            height: 8px;
+            background: #1e293b;
+            border-radius: 4px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            width: 100%;
+            transition: width 0.4s ease, background-color 0.4s ease;
+        }
+
+        #fillWarmth { background: var(--success); }
+        #fillSanity { background: var(--accent-ghost); }
+
+        /* Main Game Screen */
+        .viewport {
+            flex: 1;
+            padding: 35px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .story-text {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: #e2e8f0;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .inventory-badge {
+            display: inline-block;
+            background: rgba(253, 224, 71, 0.1);
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+
+        /* Action Panel / Choices */
+        .action-panel {
+            padding: 20px 35px 30px 35px;
+            background: #0b101c;
+            border-top: 1px solid var(--panel-border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .action-btn {
+            background: #162032;
+            color: var(--text-main);
+            border: 1px solid var(--panel-border);
+            padding: 14px 20px;
+            text-align: left;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .action-btn:hover {
+            background: #1e293b;
+            border-color: var(--accent-ghost);
+            color: #ffffff;
+            transform: translateX(6px);
+        }
+
+        .action-btn span.cost {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        /* Title Splash Screen */
+        .title-screen {
+            text-align: center;
+            margin: auto;
+        }
+
+        .title-screen h1 {
+            color: var(--accent-gold);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(253, 224, 71, 0.3);
+        }
+
+        .title-screen p {
+            color: #94a3b8;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <div class="fog-layer"></div>
+    
+    <!-- Top HUD -->
+    <div class="hud-header" id="hudHeader" style="display: none;">
+        <div class="location-tag" id="locTag">Cévennes Pass • Night 1</div>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span>Warmth: <strong id="txtWarmth">100</strong>%</span>
+                <div class="stat-bar-bg"><div class="stat-bar-fill" id="fillWarmth" style="width: 100%;"></div></div>
+            </div>
+            <div class="stat-box">
+                <span>Sanity: <strong id="txtSanity">100</strong>%</span>
+                <div class="stat-bar-bg"><div class="stat-bar-fill" id="fillSanity" style="width: 100%;"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Viewport -->
+    <div class="viewport" id="viewport">
+        <div class="title-screen">
+            <h1>LA DAME BLANCHE</h1>
+            <p>A Survival Tale of Greed and Mist in Medieval France</p>
+            <button class="action-btn" style="justify-content: center; width: 220px; margin: 0 auto; text-align: center;" onclick="startGame()">ENTER THE PASS</button>
+        </div>
+    </div>
+
+    <!-- Action Choices Panel -->
+    <div class="action-panel" id="actionPanel" style="display: none;"></div>
+</div>
+
+<script>
+    let gameState = {
+        warmth: 100,
+        sanity: 100,
+        hasGold: true,
+        currentNode: 'intro'
+    };
+
+    const nodes = {
+        intro: {
+            loc: "Cévennes Forest Edge",
+            text: "October 1348. The freezing autumn mist clings to Marc’s wool cloak like a shroud. Heavy inside his leather satchel rests stolen gold—enough to change his life, if the mountain doesn't claim him first. The path ahead dissolves into absolute white fog.",
+            choices: [
+                { text: "Plunge forward into the mist, ignoring the bitter cold.", next: "rising_action", warmthCost: 10, sanityCost: 5 },
+                { text: "Hesitate and hug close to the jagged rock wall.", next: "rock_hug", warmthCost: 5, sanityCost: 10 }
+            ]
+        },
+        rock_hug: {
+            loc: "The Frozen Precipice",
+            text: "Pressing against the freezing stone preserves your warmth slightly, but the sheer isolation frays your nerves. Phantom voices seem to whisper your name from the dark canopy above.",
+            choices: [
+                { text: "Push forward onto the open mountain trail.", next: "rising_action", warmthCost: 10, sanityCost: 10 }
+            ]
+        },
+        rising_action: {
+            loc: "The Whispering Woods",
+            text: "As night deepens, the wind carries ghostly, mocking whispers through the pine boughs. The heavy purse of stolen coin pulls awkwardly at your belt, throwing off your balance on the slick shale. Up ahead in the dense fog, a pale, glowing white lantern swings rhythmically back and forth.",
+            choices: [
+                { text: "Eagerly pursue the light, believing it's a local villager guiding the way.", next: "climax", warmthCost: 15, sanityCost: 15 },
+                { text: "Pause to catch your breath and steady your nerves.", next: "climax_rested", warmthCost: 10, sanityCost: 5 }
+            ]
+        },
+        climax_rested: {
+            loc: "The Ridge Shortcut",
+            text: "You take a brief moment to catch your breath. The bobbing white lantern ahead moves slower, waiting as if tethered to your own pace.",
+            choices: [
+                { text: "Follow the glowing lantern further into the fog.", next: "climax", warmthCost: 10, sanityCost: 10 }
+            ]
+        },
+        climax: {
+            loc: "The Edge of the Abyss",
+            text: "You push through a final thick wall of mist, stepping eagerly toward the light—and your lead foot hangs over absolute nothingness. You are standing on the sheer edge of a thousand-foot ravine. Standing beside the drop is the White Lady. Her glowing lantern illuminates her mournful, silent face. She extends a pale hand—not to push you, but pointing directly at the heavy bag of gold at your hip.",
+            choices: [
+                { text: "[SACRIFICE] Realize greed has led you to death. Unbuckle and drop the gold bag!", next: "resolution_saved", warmthCost: 0, sanityCost: -20 },
+                { text: "[GREED] Refuse to surrender your stolen wealth and try to push past her.", next: "death_greed", warmthCost: 0, sanityCost: 50 }
+            ]
+        },
+        death_greed: {
+            loc: "The Dark Abyss",
+            text: "Blinded by greed to the very end, Marc tries to brush past the phantom. The heavy purse drags him off balance. With a sharp gasp, his boot slips on black ice, and he plunges headlong into the dark chasm.",
+            isEnding: true,
+            endingTitle: "TRAGEDY: CONSUMED BY GREED",
+            endingText: "You fell into the ravine. Your stolen gold lies scattered across cold stone, forever unclaimed."
+        },
+        resolution_saved: {
+            loc: "The Safe Descent",
+            text: "A profound wave of clarity hits you. Money is worthless to a corpse. With trembling fingers, you unbuckle the heavy leather sack and drop it into the dark chasm below. Instantly, an immense physical weight and mental dread lift from your shoulders. The White Lady nods softly, turning to lead you along a safe, luminous path down the mountain.",
+            choices: [
+                { text: "Follow her glowing guidance down to the valley floor.", next: "epilogue", warmthCost: 0, sanityCost: 0 }
+            ]
+        },
+        epilogue: {
+            loc: "Cévennes Village Floor",
+            text: "Marc breaks through the tree line just as dawn breaks over the village square. He is penniless, shivering, but entirely alive—and forever reformed.\n\nTo this day, mountain peasants whisper the legend: the White Lady appears in the fog to guide the humble safely home, but leads the greedy to drop their heavy burdens into the ravine.",
+            isEnding: true,
+            endingTitle: "VICTORY: REDEMPTION IN THE MIST",
+            endingText: "You survived the pass with your life intact, leaving your greed behind in the dark."
+        }
+    };
+
+    function startGame() {
+        document.getElementById('hudHeader').style.display = 'flex';
+        document.getElementById('actionPanel').style.display = 'flex';
+        gameState = { warmth: 100, sanity: 100, hasGold: true, currentNode: 'intro' };
+        updateGame();
+    }
+
+    function updateGame() {
+        const node = nodes[gameState.currentNode];
+        
+        // Update HUD Location
+        document.getElementById('locTag').innerText = node.loc;
+        document.getElementById('txtWarmth').innerText = Math.max(0, gameState.warmth);
+        document.getElementById('txtSanity').innerText = Math.max(0, gameState.sanity);
+
+        document.getElementById('fillWarmth').style.width = gameState.warmth + '%';
+        document.getElementById('fillSanity').style.width = gameState.sanity + '%';
+
+        // Color coding bars
+        document.getElementById('fillWarmth').style.backgroundColor = gameState.warmth < 30 ? 'var(--danger)' : 'var(--success)';
+        document.getElementById('fillSanity').style.backgroundColor = gameState.sanity < 30 ? 'var(--danger)' : 'var(--accent-ghost)';
+
+        const viewport = document.getElementById('viewport');
+        const actionPanel = document.getElementById('actionPanel');
+
+        if (node.isEnding) {
+            viewport.innerHTML = `
+                <div class="title-screen" style="animation: fadeIn 0.6s ease;">
+                    <h1 style="color: ${node.endingTitle.includes('TRAGEDY') ? 'var(--danger)' : 'var(--accent-gold)'}; font-size: 1.8rem;">${node.endingTitle}</h1>
+                    <p style="margin-top: 15px; line-height: 1.6;">${node.text}</p>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-top: 10px;">${node.endingText}</p>
+                </div>
+            `;
+            actionPanel.innerHTML = `
+                <button class="action-btn" style="justify-content: center; text-align: center;" onclick="startGame()">PLAY AGAIN</button>
+            `;
+            return;
+        }
+
+        let inventoryHtml = gameState.hasGold ? `<div class="inventory-badge">Inventory: Stolen Gold Purse (Heavy)</div>` : `<div class="inventory-badge" style="border-color: #64748b; color: #64748b;">Inventory: Empty Hands (Light & Free)</div>`;
+
+        viewport.innerHTML = `
+            <div class="story-text">
+                <p>${node.text}</p>
+                ${inventoryHtml}
+            </div>
+        `;
+
+        actionPanel.innerHTML = '';
+        node.choices.forEach(choice => {
+            const btn = document.createElement('button');
+            btn.className = 'action-btn';
+            
+            let costText = '';
+            if (choice.warmthCost > 0) costText += `-${choice.warmth || choice.warmthCost} Warmth `;
+            if (choice.sanityCost > 0) costText += `-${choice.sanityCost} Sanity`;
+            if (choice.sanityCost < 0) costText += `+${Math.abs(choice.sanityCost)} Clarity`;
+
+            btn.innerHTML = `<span>${choice.text}</span> <span class="cost">${costText}</span>`;
+            
+            btn.onclick = () => {
+                gameState.warmth -= choice.warmthCost;
+                gameState.sanity -= choice.sanityCost;
+
+                if (gameState.currentNode === 'climax' && choice.text.includes('SACRIFICE')) {
+                    gameState.hasGold = false;
+                }
+
+                // Check death conditions
+                if (gameState.warmth <= 0 || gameState.sanity <= 0) {
+                    gameState.currentNode = 'death_greed';
+                    nodes['death_greed'].text = "Overwhelmed by the bitter frost and unhinged terror in the deep fog, Marc's legs give out. He collapses into the freezing snow, swallowed by the Cévennes night.";
+                    updateGame();
+                    return;
+                }
+
+                gameState.currentNode = choice.next;
+                updateGame();
+            };
+            actionPanel.appendChild(btn);
+        });
+    }
+</script>
+
+</body>
+</html>
