@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Lantern on the Mist-Cliff</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --panel-bg: rgba(5, 8, 18, 0.84);
+      --text: #eef3ff;
+      --muted: #b8c5ea;
+      --accent: #d9e9ff;
+      --glow: rgba(225, 244, 255, 0.95);
+      --danger: #f8d0a2;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 20% 15%, rgba(178, 192, 235, 0.2), transparent 38%),
+        radial-gradient(circle at 80% 5%, rgba(200, 225, 255, 0.18), transparent 32%),
+        linear-gradient(180deg, #141725 0%, #0d1322 45%, #070b13 100%);
+      color: var(--text);
+      padding: 1rem;
+    }
+
+    .myth {
+      width: min(100%, 1080px);
+      aspect-ratio: 9 / 16;
+      max-height: calc(100vh - 2rem);
+      min-height: min(80vh, 640px);
+      border: 1px solid rgba(215, 230, 255, 0.22);
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      background: linear-gradient(180deg, #1a2033 0%, #0e1526 60%, #0a111d 100%);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .mist {
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 25% 40%, rgba(229, 237, 255, 0.2), transparent 42%),
+        radial-gradient(circle at 68% 22%, rgba(214, 234, 255, 0.18), transparent 35%),
+        radial-gradient(circle at 52% 74%, rgba(229, 237, 255, 0.16), transparent 40%);
+      animation: drift 14s linear infinite alternate;
+      pointer-events: none;
+      opacity: 0.85;
+    }
+
+    @keyframes drift {
+      from { transform: translateX(-2.2%); }
+      to { transform: translateX(2.2%); }
+    }
+
+    header {
+      z-index: 2;
+      display: grid;
+      gap: 0.35rem;
+      padding: 1.1rem 1.15rem 0.7rem;
+      background: linear-gradient(180deg, rgba(8, 12, 23, 0.95), rgba(8, 12, 23, 0.4));
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.1rem, 1.8vw, 1.7rem);
+      letter-spacing: 0.02em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(0.78rem, 1.3vw, 1.02rem);
+    }
+
+    main {
+      z-index: 2;
+      position: relative;
+      padding: 0.7rem 1.05rem 0.8rem;
+      display: grid;
+      gap: 0.75rem;
+      overflow: hidden;
+    }
+
+    .lantern-zone {
+      min-height: 100px;
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    .lantern {
+      width: 78px;
+      height: 78px;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      color: #10111a;
+      font-weight: 700;
+      background: radial-gradient(circle at 45% 40%, #ffffff 0%, #f6f0d5 48%, #d8ba8e 100%);
+      box-shadow: 0 0 16px rgba(245, 233, 184, 0.66), 0 0 44px rgba(231, 234, 255, 0.65);
+      animation: sway 2.6s ease-in-out infinite;
+      transition: transform 180ms ease;
+    }
+
+    .lantern:hover,
+    .lantern:focus-visible {
+      transform: scale(1.08);
+      outline: 2px solid rgba(255, 253, 230, 0.85);
+      outline-offset: 3px;
+    }
+
+    @keyframes sway {
+      0%, 100% { transform: rotate(-3deg) translateY(-2px); }
+      50% { transform: rotate(3deg) translateY(2px); }
+    }
+
+    .lantern-hint {
+      margin: 0.5rem 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      text-align: center;
+    }
+
+    .phase-panel {
+      border: 1px solid rgba(218, 230, 255, 0.25);
+      background: var(--panel-bg);
+      border-radius: 12px;
+      padding: 0.75rem;
+      overflow: auto;
+      min-height: 0;
+      box-shadow: inset 0 0 22px rgba(230, 243, 255, 0.06);
+    }
+
+    .phase {
+      display: none;
+      animation: reveal 240ms ease-out;
+    }
+
+    .phase.active {
+      display: block;
+    }
+
+    @keyframes reveal {
+      from { opacity: 0.2; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .phase h2 {
+      margin: 0 0 0.45rem;
+      font-size: clamp(1rem, 1.55vw, 1.3rem);
+      color: var(--accent);
+    }
+
+    .phase p {
+      margin: 0.38rem 0;
+      line-height: 1.45;
+      font-size: clamp(0.88rem, 1.2vw, 1.02rem);
+    }
+
+    .phase strong {
+      color: var(--danger);
+    }
+
+    nav {
+      z-index: 2;
+      background: linear-gradient(0deg, rgba(7, 11, 20, 0.98), rgba(7, 11, 20, 0.76));
+      border-top: 1px solid rgba(219, 230, 255, 0.17);
+      padding: 0.75rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.42rem;
+    }
+
+    .step {
+      border: 1px solid rgba(220, 233, 255, 0.37);
+      color: var(--text);
+      background: rgba(31, 44, 74, 0.55);
+      border-radius: 999px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.84rem;
+      cursor: pointer;
+      transition: background 130ms ease, transform 130ms ease;
+    }
+
+    .step:hover,
+    .step:focus-visible {
+      background: rgba(55, 82, 131, 0.68);
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    .step.active {
+      color: #070c18;
+      background: var(--glow);
+      border-color: rgba(255, 255, 255, 0.85);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <section class="myth" aria-label="Interactive myth story">
+    <div class="mist" aria-hidden="true"></div>
+    <header>
+      <h1>The Lantern on the Mist-Cliff</h1>
+      <p class="subtitle">A Cévennes mountain legend about greed, fear, and mercy.</p>
+    </header>
+
+    <main>
+      <div class="lantern-zone">
+        <button class="lantern" id="lantern" type="button">LANTERN</button>
+      </div>
+      <p class="lantern-hint">Click the lantern to move through the tale.</p>
+
+      <article class="phase-panel" aria-live="polite">
+        <section class="phase active" data-step="0">
+          <h2>FIRST — Exposition</h2>
+          <p><strong>Characters:</strong> Marc, a desperate traveler fleeing with stolen coin, and the White Lady, a silent spirit guarding the pass.</p>
+          <p><strong>Setting:</strong> A slippery mountain valley in medieval France on a bitter autumn night choked with fog.</p>
+          <p><strong>Conflict:</strong> Marc must reach town before dawn to keep his wealth, but the mist hides the ravine edge and traps him high on the mountain.</p>
+        </section>
+
+        <section class="phase" data-step="1">
+          <h2>NEXT — Rising Action</h2>
+          <p>Phantom winds whisper through the trees as night deepens, and Marc loses the trail entirely.</p>
+          <p>His heavy purse drags him toward steep drops, yet greed keeps him from turning back.</p>
+          <p>Then a glowing white lantern appears ahead. Believing a villager waits in the fog, Marc hurries after the light.</p>
+        </section>
+
+        <section class="phase" data-step="2">
+          <h2>SUDDENLY — Climax</h2>
+          <p>The mist parts as Marc steps forward: he is standing on the absolute edge of a sheer cliff.</p>
+          <p>The lantern belongs to the White Lady. She does not shove him; she points to his stolen gold and demands a choice.</p>
+          <p>Marc finally understands. He drops the purse into the abyss. Freed from its weight, he stumbles back as the spirit bows and guides him away.</p>
+        </section>
+
+        <section class="phase" data-step="3">
+          <h2>LAST — Resolution</h2>
+          <p>The White Lady lights a clear ghostly path through the dark woods and leads Marc safely to the valley floor.</p>
+          <p>He reaches the village alive but penniless, changed forever by what greed nearly cost him.</p>
+          <p>To this day, locals say the White Lady appears in Cévennes fog: guiding the humble home, and forcing the greedy to drop their burdens into the ravine.</p>
+        </section>
+      </article>
+    </main>
+
+    <nav aria-label="Story navigation">
+      <button class="step active" data-step="0" type="button">FIRST</button>
+      <button class="step" data-step="1" type="button">NEXT</button>
+      <button class="step" data-step="2" type="button">SUDDENLY</button>
+      <button class="step" data-step="3" type="button">LAST</button>
+    </nav>
+  </section>
+
+  <script>
+    const steps = [...document.querySelectorAll(".step")];
+    const phases = [...document.querySelectorAll(".phase")];
+    const lantern = document.getElementById("lantern");
+    let current = 0;
+
+    const showStep = (index) => {
+      current = (index + phases.length) % phases.length;
+      phases.forEach((phase, i) => phase.classList.toggle("active", i === current));
+      steps.forEach((button, i) => button.classList.toggle("active", i === current));
+    };
+
+    steps.forEach((button) => {
+      button.addEventListener("click", () => showStep(Number(button.dataset.step)));
+    });
+
+    lantern.addEventListener("click", () => showStep(current + 1));
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight") showStep(current + 1);
+      if (event.key === "ArrowLeft") showStep(current - 1);
+    });
+  </script>
+</body>
+</html>
